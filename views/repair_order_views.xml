@@ -8,14 +8,18 @@
         <field name="company_id" eval="False"/>
     </record>
 
-    <!-- 2. Herança da View de Formulário (ID CORRIGIDO) -->
+    <!-- 2. Herança da View de Formulário -->
     <record id="view_repair_order_form_inherit_mrp_final" model="ir.ui.view">
         <field name="name">repair.order.form.inherit.mrp</field>
         <field name="model">repair.order</field>
-        <!-- AQUI ESTÁ A CORREÇÃO: use 'view_repair_order_form' conforme mostrado no SQL -->
         <field name="inherit_id" ref="repair.view_repair_order_form"/>
         <field name="arch" type="xml">
             
+            <!-- CORREÇÃO CRÍTICA: Adiciona company_id invisível para satisfazer o domínio do product_id -->
+            <xpath expr="//sheet" position="inside">
+                <field name="company_id" groups="base.group_multi_company" invisible="1"/>
+            </xpath>
+
             <!-- Adiciona campos no topo (após product_id) -->
             <xpath expr="//field[@name='product_id']" position="after">
                 <field name="os_number" readonly="1" force_save="1"/>
@@ -58,6 +62,8 @@
                         </tree>
                         <form>
                             <sheet>
+                                <!-- Garante company_id também no form da linha editável se necessário -->
+                                <field name="company_id" invisible="1"/>
                                 <group>
                                     <group>
                                         <field name="name" readonly="1"/>
