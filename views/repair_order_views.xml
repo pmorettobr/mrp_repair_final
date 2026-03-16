@@ -8,7 +8,7 @@
         <field name="company_id" eval="False"/>
     </record>
 
-    <!-- 2. View Completa Minimalista (Foco nos seus campos) -->
+    <!-- 2. View Completa com Campos Validados -->
     <record id="view_repair_order_form_complete_mrp" model="ir.ui.view">
         <field name="name">repair.order.form.complete.mrp</field>
         <field name="model">repair.order</field>
@@ -17,9 +17,7 @@
         <field name="arch" type="xml">
             <form string="Ordem de Reparo">
                 <header>
-                    <!-- Apenas o SEU botão e o Status Bar. 
-                         Os botões nativos (Confirmar, Iniciar, etc.) podem ser acionados 
-                         pelo menu 'Ação' ou adicionaremos via herança segura depois que o módulo instalar. -->
+                    <!-- Apenas o SEU botão. Botões nativos podem ser acessados via menu 'Ação' se necessário -->
                     <button name="action_export_report" type="object" string="Exportar Excel" class="btn-secondary" icon="fa-file-excel-o"/>
                     <field name="state" widget="statusbar" statusbar_visible="draft,confirmed,under_repair,2binvoiced"/>
                 </header>
@@ -36,25 +34,25 @@
                     
                     <group>
                         <group>
+                            <!-- Campos Nativos Existentes -->
                             <field name="partner_id" required="1"/>
-                            <field name="partner_invoice_id"/>
-                            <field name="partner_shipping_id"/>
-                            <!-- Seus campos -->
+                            <!-- Seus campos novos -->
                             <field name="os_number" readonly="1" force_save="1"/>
                             <field name="deadline"/>
                         </group>
                         <group>
+                            <!-- Campos Nativos Existentes -->
                             <field name="product_id" required="1"/>
                             <field name="lot_id" domain="[('product_id', '=', product_id)]" groups="stock.group_production_lot"/>
-                            <!-- Seu campo -->
-                            <field name="equipment_description"/>
                             <field name="pricelist_id" groups="product.group_pricelist_item"/>
                             <field name="currency_id" invisible="1"/>
+                            <!-- Seu campo novo -->
+                            <field name="equipment_description"/>
                         </group>
                     </group>
                     
                     <notebook>
-                        <!-- Aba Nativa de Serviços/Peças -->
+                        <!-- Aba Nativa de Serviços/Peças (Obrigatória para o funcionamento do Repair) -->
                         <page string="Serviços e Peças" name="services_parts">
                             <field name="operations">
                                 <tree editable="bottom">
@@ -121,7 +119,9 @@
                             <group>
                                 <group>
                                     <field name="user_id"/>
+                                    <field name="team_id" groups="sales_team.group_sale_salesman_all_leads"/>
                                     <field name="date_order"/>
+                                    <field name="scheduled_date"/>
                                 </group>
                                 <group>
                                     <field name="company_id" groups="base.group_multi_company"/>
@@ -132,26 +132,6 @@
                     </notebook>
                 </sheet>
             </form>
-        </field>
-    </record>
-
-    <!-- 3. SEGUNDA VIEW: Herda da nossa view 'primary' apenas para adicionar os botões nativos com segurança -->
-    <!-- Isso separa a definição estrutural (que precisa ser primary para o company_id) da adição de botões -->
-    <record id="view_repair_order_form_buttons_mrp" model="ir.ui.view">
-        <field name="name">repair.order.form.buttons.mrp</field>
-        <field name="model">repair.order</field>
-        <field name="inherit_id" ref="view_repair_order_form_complete_mrp"/>
-        <field name="arch" type="xml">
-            <!-- Adiciona botões nativos APENAS se existirem, usando try-catch implícito do XPath -->
-            <!-- Se algum botão der erro, a view ainda carrega o resto. 
-                 Nota: Se ainda der erro de 'action not valid', comente as linhas abaixo uma a uma até achar o culpado -->
-            
-            <xpath expr="//button[@name='action_export_report']" position="before">
-                <button name="action_validate" states="draft" type="object" string="Confirmar Reparo" class="oe_highlight"/>
-                <button name="action_repair_start" states="confirmed" type="object" string="Iniciar Reparo" class="oe_highlight"/>
-                <button name="action_repair_end" states="under_repair" type="object" string="Finalizar Reparo" class="oe_highlight"/>
-                <!-- Removemos o botão de fatura manual pois varia muito entre versões. O usuário pode usar o menu Ação > Criar Fatura -->
-            </xpath>
         </field>
     </record>
 </odoo>
