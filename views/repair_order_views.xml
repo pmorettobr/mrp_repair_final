@@ -8,85 +8,143 @@
         <field name="company_id" eval="False"/>
     </record>
 
-    <!-- 2. Herança da View -->
-    <record id="view_repair_order_form_inherit_mrp_final" model="ir.ui.view">
-        <field name="name">repair.order.form.inherit.mrp</field>
+    <!-- 2. NOVA VIEW COMPLETA (Substitui a herdada problemática) -->
+    <record id="view_repair_order_form_complete_mrp" model="ir.ui.view">
+        <field name="name">repair.order.form.complete.mrp</field>
         <field name="model">repair.order</field>
-        <field name="inherit_id" ref="repair.view_repair_order_form"/>
+        <field name="priority" eval="99"/> <!-- Prioridade alta para assumir o controle -->
+        <!-- O truque: mode='primary' cria uma view nova que substitui a padrão se tiver prioridade maior ou se for a única -->
+        <field name="mode">primary</field> 
         <field name="arch" type="xml">
-            
-            <!-- CRÍTICO: Injeta company_id no nível do FORM, antes do header/sheet -->
-            <!-- Isso garante que o validador veja o campo antes de processar product_id -->
-            <xpath expr="//form" position="inside">
-                <field name="company_id" invisible="1" force_save="1"/>
-            </xpath>
-
-            <!-- Adiciona campos visíveis no topo -->
-            <xpath expr="//field[@name='product_id']" position="after">
-                <field name="os_number" readonly="1" force_save="1"/>
-                <field name="deadline"/>
-            </xpath>
-            
-            <xpath expr="//field[@name='lot_id']" position="after">
-                <field name="equipment_description"/>
-            </xpath>
-
-            <!-- Botão no Header -->
-            <xpath expr="//header" position="inside">
-                <button name="action_export_report" 
-                        type="object" 
-                        string="Exportar Excel" 
-                        class="btn-secondary" 
-                        icon="fa-file-excel-o"
-                        groups="base.group_user"/>
-            </xpath>
-
-            <!-- Aba de MOs -->
-            <xpath expr="//notebook" position="inside">
-                <page string="Ordens de Produção (MOs)" name="productions_tab">
+            <form string="Ordem de Reparo">
+                <header>
+                    <!-- Botões Nativos do Repair (Recriados para garantir funcionamento) -->
+                    <button name="action_validate" states="draft" type="object" string="Confirmar Reparo" class="oe_highlight" data-hotkey="v"/>
+                    <button name="action_repair_start" states="confirmed" type="object" string="Iniciar Reparo" class="oe_highlight" data-hotkey="q"/>
+                    <button name="action_repair_end" states="under_repair" type="object" string="Finalizar Reparo" class="oe_highlight" data-hotkey="x"/>
+                    <button name="action_create_invoice" states="2binvoiced" type="object" string="Criar Fatura" class="oe_highlight" groups="account.group_account_invoice"/>
+                    
+                    <!-- SEU BOTÃO NOVO -->
+                    <button name="action_export_report" type="object" string="Exportar Excel" class="btn-secondary" icon="fa-file-excel-o"/>
+                    
+                    <field name="state" widget="statusbar" statusbar_visible="draft,confirmed,under_repair,2binvoiced"/>
+                </header>
+                
+                <sheet>
+                    <!-- CAMPO CRÍTICO: company_id invisível ANTES de qualquer coisa -->
+                    <field name="company_id" groups="base.group_multi_company" invisible="1" force_save="1"/>
+                    
+                    <div class="oe_button_box" name="button_box">
+                        <!-- Smart buttons podem ser adicionados aqui se necessário -->
+                    </div>
+                    
+                    <div class="oe_title">
+                        <h1>
+                            <field name="name" readonly="1"/>
+                        </h1>
+                    </div>
+                    
                     <group>
                         <group>
-                            <field name="progress_percent" widget="progressbar"/>
+                            <field name="partner_id" required="1"/>
+                            <field name="partner_invoice_id" domain="[('parent_id', '=', partner_id)]"/>
+                            <field name="partner_shipping_id" domain="[('parent_id', '=', partner_id)]"/>
+                            <!-- Seu campo novo -->
+                            <field name="os_number" readonly="1" force_save="1"/>
+                            <field name="deadline"/>
+                        </group>
+                        <group>
+                            <field name="product_id" required="1"/>
+                            <field name="lot_id" domain="[('product_id', '=', product_id)]" groups="stock.group_production_lot"/>
+                            <!-- Seu campo novo -->
+                            <field name="equipment_description"/>
+                            <field name="pricelist_id" groups="product.group_pricelist_item"/>
+                            <field name="currency_id" invisible="1"/>
                         </group>
                     </group>
-                    <field name="production_ids">
-                        <tree editable="bottom">
-                            <field name="name"/>
-                            <field name="product_id"/>
-                            <field name="parent_product"/>
-                            <field name="operation_name"/>
-                            <field name="workcenter_name"/>
-                            <field name="status_custom" widget="badge" decoration-success="status_custom == 'done'" decoration-warning="status_custom == 'waiting'" decoration-info="status_custom == 'in_progress'" decoration-danger="status_custom == 'rejected'"/>
-                            <field name="start_time"/>
-                            <field name="end_time"/>
-                        </tree>
-                        <form>
-                            <!-- Garante company_id também no sub-formulário da linha -->
-                            <field name="company_id" invisible="1"/>
-                            <sheet>
+                    
+                    <notebook>
+                        <!-- Aba Nativa de Serviços/Peças -->
+                        <page string="Serviços e Peças" name="services_parts">
+                            <field name="operations">
+                                <tree editable="bottom">
+                                    <field name="type"/>
+                                    <field name="product_id" domain="[('type', 'in', ['product', 'consu'])]" context="{'default_type': 'product'}"/>
+                                    <field name="name"/>
+                                    <field name="product_uom" groups="uom.group_uom"/>
+                                    <field name="product_qty"/>
+                                    <field name="price_unit"/>
+                                    <field name="price_subtotal" widget="monetary" options="{'currency_field': 'currency_id'}"/>
+                                </tree>
+                            </field>
+                            <group class="oe_subtotal_footer oe_right">
+                                <field name="amount_total" widget="monetary" options="{'currency_field': 'currency_id'}"/>
+                            </group>
+                        </page>
+
+                        <!-- SUA NOVA ABA DE MOs -->
+                        <page string="Ordens de Produção (MOs)" name="productions_tab">
+                            <group>
                                 <group>
-                                    <group>
-                                        <field name="name" readonly="1"/>
-                                        <field name="product_id"/>
-                                        <field name="parent_product"/>
-                                        <field name="sub_product"/>
-                                    </group>
-                                    <group>
-                                        <field name="operation_name"/>
-                                        <field name="workcenter_name"/>
-                                        <field name="status_custom"/>
-                                        <field name="start_time"/>
-                                        <field name="end_time"/>
-                                    </group>
+                                    <field name="progress_percent" widget="progressbar"/>
+                                </group>
+                            </group>
+                            <field name="production_ids">
+                                <tree editable="bottom">
+                                    <field name="name"/>
+                                    <field name="product_id"/>
+                                    <field name="parent_product"/>
+                                    <field name="operation_name"/>
+                                    <field name="workcenter_name"/>
+                                    <field name="status_custom" widget="badge" decoration-success="status_custom == 'done'" decoration-warning="status_custom == 'waiting'" decoration-info="status_custom == 'in_progress'" decoration-danger="status_custom == 'rejected'"/>
+                                    <field name="start_time"/>
+                                    <field name="end_time"/>
+                                </tree>
+                                <form>
+                                    <sheet>
+                                        <!-- Company_id também no sub-form -->
+                                        <field name="company_id" invisible="1"/>
+                                        <group>
+                                            <group>
+                                                <field name="name" readonly="1"/>
+                                                <field name="product_id"/>
+                                                <field name="parent_product"/>
+                                                <field name="sub_product"/>
+                                            </group>
+                                            <group>
+                                                <field name="operation_name"/>
+                                                <field name="workcenter_name"/>
+                                                <field name="status_custom"/>
+                                                <field name="start_time"/>
+                                                <field name="end_time"/>
+                                            </group>
+                                        </group>
+                                        <group>
+                                            <field name="deviation_note"/>
+                                        </group>
+                                    </sheet>
+                                </form>
+                            </field>
+                        </page>
+                        
+                        <!-- Aba de Informações Adicionais (Nativa) -->
+                        <page string="Informações Adicionais" name="other_infos">
+                            <group>
+                                <group>
+                                    <field name="team_id" groups="sales_team.group_sale_salesman_all_leads"/>
+                                    <field name="user_id"/>
+                                    <field name="date_order"/>
+                                    <field name="scheduled_date"/>
                                 </group>
                                 <group>
-                                    <field name="deviation_note"/>
+                                    <field name="company_id" groups="base.group_multi_company"/>
+                                    <field name="internal_notes"/>
                                 </group>
-                            </sheet>
-                        </form>
-                    </field>
-                </page>
-            </xpath>
+                            </group>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
         </field>
     </record>
 </odoo>
