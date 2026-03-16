@@ -1,0 +1,22 @@
+<odoo>
+  <record id="view_mrp_production_form_inherit" model="ir.ui.view">
+    <field name="name">mrp.production.form.inherit</field>
+    <field name="model">mrp.production</field>
+    <field name="inherit_id" ref="mrp.mrp_production_form_view"/>
+    <field name="arch" type="xml">
+      <sheet position="inside">
+        <group>
+          <field name="repair_id"/>
+          <field name="parent_product"/>
+          <field name="sub_product"/>
+          <field name="operation_name"/>
+          <field name="workcenter_name"/>
+          <field name="status"/>
+          <field name="start_time"/>
+          <field name="end_time"/>
+          <field name="deviation_note"/>
+        </group>
+      </sheet>
+    </field>
+  </record>
+</odoo>
