@@ -1,12 +1,9 @@
 {
     'name': 'Repair + MRP Integration',
     'version': '16.0.1.0.0',
-    'summary': 'Integra Repair Order com MRP para fluxo híbrido com subprodutos Presonalizacao para WTT-Paulmar',
-    'author': 'Paulo Moretto',
-    'website": "https://github.com/pmoretto',
-    "category": "MRP/Repair",
-    'depends': ['repair', 'mrp'],
-    'license': 'LGPL-3',
+    'summary': 'Integra Repair Order com MRP para fluxo híbrido',
+    'author': 'Paulo Moretto',  
+    'depends': ['repair', 'mrp'],  
     'data': [
         'views/repair_order_views.xml',
         'views/mrp_production_views.xml',
