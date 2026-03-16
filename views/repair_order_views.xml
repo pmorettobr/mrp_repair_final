@@ -1,20 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-  <record id="view_repair_order_form_inherit" model="ir.ui.view">
-    <field name="name">repair.order.form.inherit</field>
-    <field name="model">repair.order</field>
-    <field name="inherit_id" ref="repair.view_repair_order_form"/>
-    <field name="arch" type="xml">
-      
-      <!-- Usar XPath específico para o header -->
-      <xpath expr="//header" position="inside">
-        <button name="action_export_report" 
-                type="object" 
-                string="Exportar Relatório Excel"
-                class="btn-secondary"
-                states="done"/>
-      </xpath>
-      
-    </field>
-  </record>
+    <record id="view_repair_order_form_inherit" model="ir.ui.view">
+        <field name="name">repair.order.form.inherit</field>
+        <field name="model">repair.order</field>
+        <field name="inherit_id" ref="repair.view_repair_order_form"/>
+        <field name="arch" type="xml">
+            <data>
+                <header position="inside">
+                    <button name="action_export_report" 
+                            type="object" 
+                            string="Exportar Excel"/>
+                </header>
+            </data>
+        </field>
+    </record>
 </odoo>
