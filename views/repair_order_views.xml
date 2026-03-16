@@ -1,38 +1,77 @@
 <odoo>
-  <record id="view_repair_order_form_inherit" model="ir.ui.view">
-    <field name="name">repair.order.form.inherit</field>
-    <field name="model">repair.order</field>
-    <field name="inherit_id" ref="repair.view_repair_order_form"/>
-    <field name="arch" type="xml">
-      <header position="inside">
-        <button name="action_export_report" type="object" string="Exportar Relatório Excel" class="btn-primary"/>
-      </header>
-      <sheet position="inside">
-        <group>
-          <field name="os_number"/>
-          <field name="equipment_description"/>
-          <field name="deadline"/>
-          <field name="progress_percent" widget="progressbar"/>
-        </group>
-        <notebook>
-          <page string="Componentes / Ordens de Produção">
-            <field name="production_ids">
-              <tree editable="bottom">
-                <field name="parent_product"/>
-                <field name="sub_product"/>
-                <field name="operation_name"/>
-                <field name="workcenter_name"/>
-                <field name="status"/>
-              </tree>
-            </field>
-          </page>
-          <page string="Resumo">
-            <group>
-              <field name="progress_percent" widget="progressbar"/>
-            </group>
-          </page>
-        </notebook>
-      </sheet>
-    </field>
-  </record>
+    <!-- Sequência para OS -->
+    <record id="seq_repair_order" model="ir.sequence">
+        <field name="name">Sequência Ordem de Reparo</field>
+        <field name="code">repair.order.seq</field>
+        <field name="prefix">OS/</field>
+        <field name="padding">5</field>
+        <field name="company_id" eval="False"/>
+    </record>
+
+    <record id="view_repair_order_form_inherit_mrp" model="ir.ui.view">
+        <field name="name">repair.order.form.inherit.mrp</field>
+        <field name="model">repair.order</field>
+        <field name="inherit_id" ref="repair.repair_order_form"/>
+        <field name="arch" type="xml">
+            <!-- Adiciona campos no topo -->
+            <xpath expr="//field[@name='product_id']" position="after">
+                <field name="os_number" readonly="1" force_save="1"/>
+                <field name="deadline"/>
+            </xpath>
+            
+            <xpath expr="//field[@name='lot_id']" position="after">
+                <field name="equipment_description"/>
+            </xpath>
+
+            <!-- Adiciona aba de Produções Vinculadas -->
+            <xpath expr="//notebook" position="inside">
+                <page string="Ordens de Produção (MOs)" name="productions_tab">
+                    <group>
+                        <group>
+                            <field name="progress_percent" widget="progressbar"/>
+                        </group>
+                    </group>
+                    <field name="production_ids">
+                        <tree create="true" delete="true" editable="bottom">
+                            <field name="name"/>
+                            <field name="product_id"/>
+                            <field name="parent_product"/>
+                            <field name="operation_name"/>
+                            <field name="workcenter_name"/>
+                            <field name="status_custom" widget="badge"/>
+                            <field name="start_time"/>
+                            <field name="end_time"/>
+                        </tree>
+                        <form>
+                            <sheet>
+                                <group>
+                                    <group>
+                                        <field name="name" readonly="1"/>
+                                        <field name="product_id"/>
+                                        <field name="parent_product"/>
+                                        <field name="sub_product"/>
+                                    </group>
+                                    <group>
+                                        <field name="operation_name"/>
+                                        <field name="workcenter_name"/>
+                                        <field name="status_custom"/>
+                                        <field name="start_time"/>
+                                        <field name="end_time"/>
+                                    </group>
+                                </group>
+                                <group>
+                                    <field name="deviation_note"/>
+                                </group>
+                            </sheet>
+                        </form>
+                    </field>
+                </page>
+            </xpath>
+
+            <!-- Botão de Exportar no Header -->
+            <xpath expr="//header" position="inside">
+                <button name="action_export_report" string="Exportar Relatório Excel" type="object" class="btn-secondary" icon="fa-file-excel-o"/>
+            </xpath>
+        </field>
+    </record>
 </odoo>
