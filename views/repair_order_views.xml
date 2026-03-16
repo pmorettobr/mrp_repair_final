@@ -8,130 +8,24 @@
         <field name="company_id" eval="False"/>
     </record>
 
-    <!-- 2. View Completa com Campos Validados -->
-    <record id="view_repair_order_form_complete_mrp" model="ir.ui.view">
-        <field name="name">repair.order.form.complete.mrp</field>
+    <!-- 2. Herança Mínima e Segura -->
+    <record id="view_repair_order_form_minimal_mrp" model="ir.ui.view">
+        <field name="name">repair.order.form.minimal.mrp</field>
         <field name="model">repair.order</field>
-        <field name="priority" eval="99"/>
-        <field name="mode">primary</field>
+        <!-- Herdando da view correta que descobrimos no SQL -->
+        <field name="inherit_id" ref="repair.view_repair_order_form"/>
         <field name="arch" type="xml">
-            <form string="Ordem de Reparo">
-                <header>
-                    <!-- Apenas o SEU botão. Botões nativos podem ser acessados via menu 'Ação' se necessário -->
-                    <button name="action_export_report" type="object" string="Exportar Excel" class="btn-secondary" icon="fa-file-excel-o"/>
-                    <field name="state" widget="statusbar" statusbar_visible="draft,confirmed,under_repair,2binvoiced"/>
-                </header>
-                
-                <sheet>
-                    <!-- CRÍTICO: company_id invisível ANTES de qualquer coisa -->
-                    <field name="company_id" groups="base.group_multi_company" invisible="1" force_save="1"/>
-                    
-                    <div class="oe_title">
-                        <h1>
-                            <field name="name" readonly="1"/>
-                        </h1>
-                    </div>
-                    
-                    <group>
-                        <group>
-                            <!-- Campos Nativos Existentes -->
-                            <field name="partner_id" required="1"/>
-                            <!-- Seus campos novos -->
-                            <field name="os_number" readonly="1" force_save="1"/>
-                            <field name="deadline"/>
-                        </group>
-                        <group>
-                            <!-- Campos Nativos Existentes -->
-                            <field name="product_id" required="1"/>
-                            <field name="lot_id" domain="[('product_id', '=', product_id)]" groups="stock.group_production_lot"/>
-                            <field name="pricelist_id" groups="product.group_pricelist_item"/>
-                            <field name="currency_id" invisible="1"/>
-                            <!-- Seu campo novo -->
-                            <field name="equipment_description"/>
-                        </group>
-                    </group>
-                    
-                    <notebook>
-                        <!-- Aba Nativa de Serviços/Peças (Obrigatória para o funcionamento do Repair) -->
-                        <page string="Serviços e Peças" name="services_parts">
-                            <field name="operations">
-                                <tree editable="bottom">
-                                    <field name="type"/>
-                                    <field name="product_id" domain="[('type', 'in', ['product', 'consu'])]"/>
-                                    <field name="name"/>
-                                    <field name="product_uom" groups="uom.group_uom"/>
-                                    <field name="product_qty"/>
-                                    <field name="price_unit"/>
-                                    <field name="price_subtotal" widget="monetary" options="{'currency_field': 'currency_id'}"/>
-                                </tree>
-                            </field>
-                            <group class="oe_subtotal_footer oe_right">
-                                <field name="amount_total" widget="monetary" options="{'currency_field': 'currency_id'}"/>
-                            </group>
-                        </page>
+            
+            <!-- A. Injeta company_id invisível no sheet (resolve o erro de domínio do product_id) -->
+            <xpath expr="//sheet" position="inside">
+                <field name="company_id" groups="base.group_multi_company" invisible="1" force_save="1"/>
+            </xpath>
 
-                        <!-- SUA NOVA ABA DE MOs -->
-                        <page string="Ordens de Produção (MOs)" name="productions_tab">
-                            <group>
-                                <group>
-                                    <field name="progress_percent" widget="progressbar"/>
-                                </group>
-                            </group>
-                            <field name="production_ids">
-                                <tree editable="bottom">
-                                    <field name="name"/>
-                                    <field name="product_id"/>
-                                    <field name="parent_product"/>
-                                    <field name="operation_name"/>
-                                    <field name="workcenter_name"/>
-                                    <field name="status_custom" widget="badge" decoration-success="status_custom == 'done'" decoration-warning="status_custom == 'waiting'" decoration-info="status_custom == 'in_progress'" decoration-danger="status_custom == 'rejected'"/>
-                                    <field name="start_time"/>
-                                    <field name="end_time"/>
-                                </tree>
-                                <form>
-                                    <sheet>
-                                        <field name="company_id" invisible="1"/>
-                                        <group>
-                                            <group>
-                                                <field name="name" readonly="1"/>
-                                                <field name="product_id"/>
-                                                <field name="parent_product"/>
-                                                <field name="sub_product"/>
-                                            </group>
-                                            <group>
-                                                <field name="operation_name"/>
-                                                <field name="workcenter_name"/>
-                                                <field name="status_custom"/>
-                                                <field name="start_time"/>
-                                                <field name="end_time"/>
-                                            </group>
-                                        </group>
-                                        <group>
-                                            <field name="deviation_note"/>
-                                        </group>
-                                    </sheet>
-                                </form>
-                            </field>
-                        </page>
-                        
-                        <!-- Aba de Informações Adicionais -->
-                        <page string="Informações Adicionais" name="other_infos">
-                            <group>
-                                <group>
-                                    <field name="user_id"/>
-                                    <field name="team_id" groups="sales_team.group_sale_salesman_all_leads"/>
-                                    <field name="date_order"/>
-                                    <field name="scheduled_date"/>
-                                </group>
-                                <group>
-                                    <field name="company_id" groups="base.group_multi_company"/>
-                                    <field name="internal_notes"/>
-                                </group>
-                            </group>
-                        </page>
-                    </notebook>
-                </sheet>
-            </form>
+            <!-- B. Adiciona APENAS o campo os_number após o partner_id (campo seguro que sabemos que existe) -->
+            <xpath expr="//field[@name='partner_id']" position="after">
+                <field name="os_number" readonly="1" force_save="1"/>
+            </xpath>
+
         </field>
     </record>
 </odoo>
