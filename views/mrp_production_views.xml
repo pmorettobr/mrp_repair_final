@@ -1,22 +1,54 @@
 <odoo>
-  <record id="view_mrp_production_form_inherit" model="ir.ui.view">
-    <field name="name">mrp.production.form.inherit</field>
-    <field name="model">mrp.production</field>
-    <field name="inherit_id" ref="mrp.mrp_production_form_view"/>
-    <field name="arch" type="xml">
-      <sheet position="inside">
-        <group>
-          <field name="repair_id"/>
-          <field name="parent_product"/>
-          <field name="sub_product"/>
-          <field name="operation_name"/>
-          <field name="workcenter_name"/>
-          <field name="status"/>
-          <field name="start_time"/>
-          <field name="end_time"/>
-          <field name="deviation_note"/>
-        </group>
-      </sheet>
-    </field>
-  </record>
+    <record id="view_mrp_production_form_inherit_repair" model="ir.ui.view">
+        <field name="name">mrp.production.form.inherit.repair</field>
+        <field name="model">mrp.production</field>
+        <field name="inherit_id" ref="mrp.mrp_production_form_view"/>
+        <field name="arch" type="xml">
+            <!-- Adiciona campo de OS no topo -->
+            <xpath expr="//field[@name='product_id']" position="after">
+                <field name="repair_id" options="{'no_create': True}" attrs="{'invisible': [('id', '=', False)]}"/>
+            </xpath>
+
+            <!-- Cria um grupo para detalhes do reparo -->
+            <xpath expr="//sheet" position="inside">
+                <group string="Detalhes do Reparo" name="repair_details" attrs="{'invisible': [('repair_id', '=', False)]}">
+                    <group>
+                        <field name="parent_product"/>
+                        <field name="sub_product"/>
+                        <field name="operation_name"/>
+                        <field name="workcenter_name"/>
+                    </group>
+                    <group>
+                        <field name="status_custom" widget="badge" decoration-success="status_custom == 'done'" decoration-warning="status_custom == 'waiting'" decoration-info="status_custom == 'in_progress'" decoration-danger="status_custom == 'rejected'"/>
+                        <field name="start_time"/>
+                        <field name="end_time"/>
+                    </group>
+                </group>
+                
+                <notebook>
+                    <page string="Observações de Reparo" name="repair_notes" attrs="{'invisible': [('repair_id', '=', False)]}">
+                        <field name="deviation_note" placeholder="Descreva aqui desvios de qualidade, problemas encontrados ou observações técnicas..."/>
+                    </page>
+                </notebook>
+            </xpath>
+            
+            <!-- Botões de ação rápida no header -->
+            <xpath expr="//header" position="inside">
+                <button name="action_start_custom" string="Iniciar Operação" type="object" class="btn-primary" attrs="{'invisible': ['|', ('repair_id', '=', False), ('status_custom', 'in', ['in_progress', 'done'])]}"/>
+                <button name="action_finish_custom" string="Concluir Operação" type="object" class="btn-success" attrs="{'invisible': ['|', ('repair_id', '=', False), ('status_custom', '=', 'done')]}"/>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="view_mrp_production_tree_inherit_repair" model="ir.ui.view">
+        <field name="name">mrp.production.tree.inherit.repair</field>
+        <field name="model">mrp.production</field>
+        <field name="inherit_id" ref="mrp.mrp_production_tree_view"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='product_id']" position="after">
+                <field name="repair_id" optional="hide"/>
+                <field name="status_custom" optional="show" widget="badge"/>
+            </xpath>
+        </field>
+    </record>
 </odoo>
