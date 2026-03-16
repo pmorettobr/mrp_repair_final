@@ -1,7 +1,7 @@
 {
     'name': 'Repair + MRP Integration',
     'version': '16.0.1.0.0',
-    'summary': 'Integra Repair Order com MRP para fluxo híbrido com subprodutos',
+    'summary': 'Integra Repair Order com MRP para fluxo híbrido com subprodutos Presonalizacao para WTT-Paulmar',
     'author': 'Paulo Dev',
     'depends': ['repair', 'mrp'],
     'data': [
