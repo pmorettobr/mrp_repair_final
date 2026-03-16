@@ -6,8 +6,8 @@
     <field name="inherit_id" ref="repair.view_repair_order_form"/>
     <field name="arch" type="xml">
       
-      <!-- Botão no header -->
-      <xpath expr="//header" position="inside">
+      <!-- CORREÇÃO: Adicionar o botão APÓS o último botão do header -->
+      <xpath expr="//header/button[last()]" position="after">
         <button name="action_export_report" 
                 type="object" 
                 string="Exportar Relatório Excel" 
@@ -15,9 +15,9 @@
                 states="done"/>
       </xpath>
       
-      <!-- Campos adicionais na sheet -->
-      <xpath expr="//sheet/group[1]" position="after">
-        <group>
+      <!-- Adicionar campos APÓS o grupo existente -->
+      <xpath expr="//sheet/group[last()]" position="after">
+        <group string="Informações da OS">
           <field name="os_number"/>
           <field name="equipment_description"/>
           <field name="deadline"/>
@@ -25,7 +25,7 @@
         </group>
       </xpath>
       
-      <!-- Notebook com abas adicionais -->
+      <!-- Adicionar abas no notebook -->
       <xpath expr="//notebook" position="inside">
         <page string="Componentes / Ordens de Produção">
           <field name="production_ids">
@@ -35,6 +35,8 @@
               <field name="operation_name"/>
               <field name="workcenter_name"/>
               <field name="status" widget="badge"/>
+              <field name="start_time"/>
+              <field name="end_time"/>
             </tree>
           </field>
         </page>
